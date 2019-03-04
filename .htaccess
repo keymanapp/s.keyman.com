@@ -1,0 +1,8 @@
+<IfModule mod_headers.c>
+    Header set Access-Control-Allow-Origin "*"
+</IfModule>
+<IfModule mod_rewrite.c>
+    RewriteEngine on
+    
+    RewriteRule ^(cdnrefresh.php|Dockerfile|web.config)$ - [R=404,L]
+</IfModule>
