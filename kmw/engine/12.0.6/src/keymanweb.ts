@@ -1,13 +1,13 @@
 // Includes KMW-added property declaration extensions for HTML elements.
 /// <reference path="kmwexthtml.ts" />
 // Includes KMW string extension declarations.
-/// <reference path="kmwstring.ts" />
+/// <reference path="text/kmwstring.ts" />
 // Includes type definitions for basic KMW types.
 /// <reference path="kmwtypedefs.ts" />
 
 /***
-   KeymanWeb 10.0
-   Copyright 2017 SIL International
+   KeymanWeb 11.0
+   Copyright 2019 SIL International
 ***/
 
 // If KMW is already initialized, the KMW script has been loaded more than once. We wish to prevent resetting the 
@@ -110,9 +110,9 @@ if(!window['keyman']['initialized']) {
 
     // I732 START - Support for European underlying keyboards #1
     if(typeof(window['KeymanWeb_BaseLayout']) !== 'undefined') 
-      osk._BaseLayout = window['KeymanWeb_BaseLayout'];
+      com.keyman.osk.Layouts._BaseLayout = window['KeymanWeb_BaseLayout'];
     else
-      osk._BaseLayout = 'us';    
+      com.keyman.osk.Layouts._BaseLayout = 'us';    
     
     
     keymanweb._BrowserIsSafari = (navigator.userAgent.indexOf('AppleWebKit') >= 0);  // I732 END - Support for European underlying keyboards #1      
