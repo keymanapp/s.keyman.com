@@ -3,34 +3,25 @@
 header('Content-Type: application/json; charset=utf-8');
 header('Cache-Control: max-age=0');
 
-if(!isset($_REQUEST['majorVersion']) || !preg_match('/^\d+$/', $_REQUEST['majorVersion'])) {
-  $result = [];
-  $result['error'] = 'Invalid majorVersion parameter, must be integer';
-  emit($result);
-  exit();
-}
-
-$majorVersion = $_REQUEST['majorVersion'];
-$result = search($majorVersion);
+$result = search();
 emit($result);
 
 function version_filter($a) {
-  global $majorVersion;
   if($a == '.' || $a == '..') return false;
-  return preg_match('/^'.$majorVersion.'\.\d+(\.\d+)*$/', $a);
+  return preg_match('/^\d+\.\d+(\.\d+)*$/', $a);
 }
 
 function version_compare_backward($a, $b) {
   return version_compare($a, $b, '<');
 }
 
-function search($majorVersion) {
+function search() {
   $result = [];
   $dirs = scandir(__DIR__ . "/../kmw/engine");
   $dirs = array_filter($dirs, 'version_filter');
   if(count($dirs) > 0) {
     usort($dirs, 'version_compare_backward');
-    $result['version'] = $dirs[0];
+    $result['versions'] = $dirs;
   } else {
     $result['error'] = 'No releases found';
   }
