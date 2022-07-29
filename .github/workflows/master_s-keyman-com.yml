@@ -16,6 +16,8 @@ jobs:
   build:
     runs-on: windows-latest
 
+    concurrency: s-keyman-com-production
+
     environment:
       name: 'Production'
       url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
