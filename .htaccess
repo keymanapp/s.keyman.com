@@ -3,6 +3,6 @@
 </IfModule>
 <IfModule mod_rewrite.c>
     RewriteEngine on
-    
-    RewriteRule ^(cdnrefresh.php|Dockerfile|web.config)$ - [R=404,L]
+
+    RewriteRule ^(cdnrefresh.php|Dockerfile|web.config|.git|App_Data)$ - [R=404,L]
 </IfModule>
