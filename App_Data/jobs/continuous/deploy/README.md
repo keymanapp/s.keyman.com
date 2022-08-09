@@ -8,7 +8,8 @@ finished, it deletes .DEPLOYING, and exits the script. Kudu will restart the
 script within one minute of it exiting.
 
 .MUST_DEPLOY is created by /api/deploy.php when it is called with a valid key. The
-key is configured as an environment variable in Azure.
+key is configured as an environment variable in Azure. The deployment webhook is
+triggered by GitHub when commits are pushed to master.
 
 Logs are visible in Kudu interface. If the deploy is already running, this will
 trigger another deploy a few seconds after the current deploy finishes.
