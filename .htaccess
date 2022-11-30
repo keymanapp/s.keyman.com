@@ -4,5 +4,11 @@
 <IfModule mod_rewrite.c>
     RewriteEngine on
 
+    AddType font/woff .woff
+    AddType font/otf .otf
+    AddType application/x-apple-aspen-config .mobileconfig
+    AddType application/javascript .js 
+    AddCharset UTF-8 .js
+
     RewriteRule ^(cdnrefresh.php|Dockerfile|web.config|.git|App_Data)$ - [R=404,L]
 </IfModule>
