@@ -12,4 +12,4 @@ WORKDIR /var/www/html
 FROM php:7.4-apache
 COPY resources/keyman-site.conf /etc/apache2/conf-available/
 #COPY --chown=www-data --from=builder /var/www/html/vendor /var/www/vendor
-RUN a2enmod headers rewrite; a2enconf keyman-site
+RUN a2enmod headers mime rewrite; a2enconf keyman-site
