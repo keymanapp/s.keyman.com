@@ -44,8 +44,7 @@ builder_parse "$@"
 cd "$REPO_ROOT"
 
 if builder_start_action configure; then
-  #composer install
-  
+  # Nothing to do
   builder_finish_action success configure
 fi
 
@@ -97,6 +96,7 @@ if builder_start_action start; then
     builder_finish_action fail start
   fi
 
+  # No Composer link needed
   builder_finish_action success start
 fi
 
