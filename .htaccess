@@ -16,5 +16,5 @@
 <IfModule mod_rewrite.c>
     RewriteEngine on
 
-    RewriteRule ^(cdnrefresh.php|Dockerfile|web.config|.git|App_Data)$ - [R=404,L]
+    RewriteRule ^(build.sh|cdnrefresh.php|Dockerfile|web.config|.git|.htaccess|App_Data)$ - [R=404,L]
 </IfModule>
