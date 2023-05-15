@@ -6,7 +6,7 @@
     AddType font/woff .woff
     AddType font/woff2 .woff2
     AddType font/otf .otf
-    AddType application/octet-stream .eot
+    AddType application/vnd.ms-fontobject .eot
     AddType application/x-apple-aspen-config .mobileconfig
     AddType image/svg+xml .svg
     AddType application/javascript .js 
@@ -16,5 +16,5 @@
 <IfModule mod_rewrite.c>
     RewriteEngine on
 
-    RewriteRule ^(build.sh|cdnrefresh.php|Dockerfile|web.config|.git|.htaccess|App_Data)$ - [R=404,L]
+    RewriteRule ^(build.sh|Dockerfile|.git|resources/)$ - [R=404,L]
 </IfModule>
