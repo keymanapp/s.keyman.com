@@ -1,36 +1,13 @@
 #!/usr/bin/env bash
-#
-# Setup s.keyman.com site to run via Docker.
-#
-set -eu
-
 ## START STANDARD BUILD SCRIPT INCLUDE
 # adjust relative paths as necessary
-THIS_SCRIPT="$(greadlink -f "${BASH_SOURCE[0]}" 2>/dev/null || readlink -f "${BASH_SOURCE[0]}")"
-. "$(dirname "$THIS_SCRIPT")/resources/builder.inc.sh"
+THIS_SCRIPT="$(readlink -f "${BASH_SOURCE[0]}")"
+. "${THIS_SCRIPT%/*}/resources/builder.inc.sh"
 ## END STANDARD BUILD SCRIPT INCLUDE
 
 ################################ Main script ################################
 
-function _get_docker_image_id() {
-  echo "$(docker images -q s-keyman-website)"
-}
-
-function _get_docker_container_id() {
-  echo "$(docker ps -a -q --filter ancestor=s-keyman-website)"
-}
-
-function _stop_docker_container() {
-  S_CONTAINER=$(_get_docker_container_id)
-  if [ ! -z "$S_CONTAINER" ]; then
-    docker container stop $S_CONTAINER
-  else
-    echo "No Docker container to stop"
-  fi
-}
-
-builder_describe \
-  "Setup s.keyman.com site to run via Docker." \
+builder_describe "Setup s.keyman.com site to run via Docker." \
   configure \
   clean \
   build \
@@ -43,40 +20,52 @@ builder_parse "$@"
 # This script runs from its own folder
 cd "$REPO_ROOT"
 
-if builder_start_action configure; then
-  # Nothing to do
-  builder_finish_action success configure
-fi
+# Get the docker image ID
+function _get_docker_image_id() {
+  echo "$(docker images -q s-keyman-website)"
+}
 
-if builder_start_action clean; then
-  # Stop and cleanup Docker containers and images used for the site
-  _stop_docker_container
+# Get the Docker container ID
+function _get_docker_container_id() {
+  echo "$(docker ps -a -q --filter ancestor=s-keyman-website)"
+}
 
-  S_CONTAINER=$(_get_docker_container_id)
+function _stop_docker_container() {
+  local S_CONTAINER=$(_get_docker_container_id)
+  local CONTAINER_NAME="s-keyman-website"
+
   if [ ! -z "$S_CONTAINER" ]; then
-    docker container rm $S_CONTAINER
+    docker container stop ${CONTAINER_NAME}
   else
-    echo "No Docker container to clean"
+    echo "No Docker container to stop"
   fi
-    
-  S_IMAGE=$(_get_docker_image_id)
-  if [ ! -z "$S_IMAGE" ]; then
-    docker rmi s-keyman-website
-  else 
-    echo "No Docker image to clean"
-  fi
+}
 
-  builder_finish_action success clean
-fi
-
-if builder_start_action stop; then
-  # Stop the Docker container
+function _delete_docker_image() {
+  builder_echo "Stopping running container for s.keyman.com"
   _stop_docker_container
-  builder_finish_action success stop
-fi
+  local S_IMAGE=$(_get_docker_image_id)
+  if [ ! -z "$S_IMAGE" ]; then
+    builder_echo "Removing image $S_IMAGE for s.keyman.com"
+    docker rmi "$S_IMAGE"
+  else
+    builder_echo "No Docker s.keyman.com image to delete"
+  fi
+}
 
+
+builder_run_action configure # no action
+
+# Stop and cleanup Docker containers and images used for the site
+
+builder_run_action clean _delete_docker_image
+
+# Stop the Docker containers
+builder_run_action stop _stop_docker_container
+
+# Build the Docker container
 if builder_start_action build; then
-  # Download docker image. --mount option requires BuildKit  
+  # Download docker image. --mount option requires BuildKit
   DOCKER_BUILDKIT=1 docker build -t s-keyman-website .
 
   builder_finish_action success build
@@ -84,15 +73,24 @@ fi
 
 if builder_start_action start; then
   # Start the Docker container
+
   if [ ! -z $(_get_docker_image_id) ]; then
     if [[ $OSTYPE =~ msys|cygwin ]]; then
       # Windows needs leading slashes for path
-      docker run -d -p 8054:80 -v //$(pwd):/var/www/html/ -e S_KEYMAN_COM=localhost:8054 s-keyman-website
+      docker run -rm -d -p 8054:80 \
+        -v //$(pwd):/var/www/html/ \
+        -e S_KEYMAN_COM=localhost:8054 \
+        --name s-keyman-website \
+        s-keyman-website
     else
-      docker run -d -p 8054:80 -v $(pwd):/var/www/html/ -e S_KEYMAN_COM=localhost:8054 s-keyman-website
+      docker run -d -p 8054:80 \
+        -v $(pwd):/var/www/html/
+        -e S_KEYMAN_COM=localhost:8054 \
+        --name s-keyman-website \
+        s-keyman-website
     fi
   else
-    echo "${COLOR_RED}ERROR: Docker container doesn't exist. Run ./build.sh build first${COLOR_RESET}"
+    builder_echo error "ERROR: Docker container doesn't exist. Run ./build.sh build first"
     builder_finish_action fail start
   fi
 
@@ -102,6 +100,8 @@ fi
 
 if builder_start_action test; then
   # TODO: lint tests
+
+  docker exec -i s-keyman-website sh -c "php /var/www/html/vendor/bin/phpunit --testdox"
 
   #composer check-docker-links
 
