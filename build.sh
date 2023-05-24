@@ -74,27 +74,37 @@ fi
 if builder_start_action start; then
   # Start the Docker container
 
+  if [ -d vendor ]; then
+    builder_die "vendor folder is in the way. Please delete it"
+  fi
+
   if [ ! -z $(_get_docker_image_id) ]; then
     if [[ $OSTYPE =~ msys|cygwin ]]; then
       # Windows needs leading slashes for path
-      docker run -rm -d -p 8054:80 \
-        -v //$(pwd):/var/www/html/ \
-        -e S_KEYMAN_COM=localhost:8054 \
-        --name s-keyman-website \
-        s-keyman-website
+      SITE_HTML="//$(pwd):/var/www/html/"
     else
-      docker run -d -p 8054:80 \
-        -v $(pwd):/var/www/html/
-        -e S_KEYMAN_COM=localhost:8054 \
-        --name s-keyman-website \
-        s-keyman-website
+      SITE_HTML="$(pwd):/var/www/html/"
     fi
+
+    docker run --rm -d -p 8054:80 -v ${SITE_HTML} \
+      --name s-keyman-website \
+      s-keyman-website
+
   else
     builder_echo error "ERROR: Docker container doesn't exist. Run ./build.sh build first"
     builder_finish_action fail start
   fi
 
-  # No Composer link needed
+  # Skip if link already exists
+  if [ -L vendor ]; then
+    builder_echo "\nLink to vendor/ already exists"
+  else
+    # TODO: handle vendor/ folder in the way
+    # Create link to vendor/ folder
+    builder_echo "making link for vendor/ folder"
+    docker exec -i s-keyman-website sh -c "ln -s /var/www/vendor vendor && chown -R www-data:www-data vendor"
+  fi
+
   builder_finish_action success start
 fi
 
