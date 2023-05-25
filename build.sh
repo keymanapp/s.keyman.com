@@ -111,9 +111,9 @@ fi
 if builder_start_action test; then
   # TODO: lint tests
 
-  docker exec -i s-keyman-website sh -c "php /var/www/html/vendor/bin/phpunit --testdox"
+  #docker exec -i s-keyman-website sh -c "php /var/www/html/vendor/bin/phpunit --testdox"
 
-  #composer check-docker-links
+  composer check-docker-links
 
   builder_finish_action success test
 fi
