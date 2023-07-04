@@ -21,8 +21,8 @@ function _search () {
     arr=("${arr[@]##*/}")   # This removes the path prefix, leaving just the dir names
 
     #echo "before sort, arr is ${arr[@]}"
-    arr=$(_sortVersions "${arr[@]}")
-    echo ${arr[*]}
+    local sorted_arr=$(_sortVersions "${arr[@]}")
+    echo ${sorted_arr[*]}
   fi  
 
   cd ../../api
