@@ -20,9 +20,7 @@ function _search () {
     arr=("${arr[@]%/}")     # This removes the trailing slash on each item
     arr=("${arr[@]##*/}")   # This removes the path prefix, leaving just the dir names
 
-    #echo "before sort, arr is ${arr[@]}"
-    local sorted_arr=$(_sortVersions "${arr[@]}")
-    echo ${sorted_arr[*]}
+    echo ${arr[*]}
   fi  
 
   cd ../../api
@@ -30,8 +28,8 @@ function _search () {
 
 # Write result to JSON file
 function _emit () {
-  if [ ! -z "$result" ]; then
-    $JQ -nc '{versions: $ARGS.positional}' --args ${result[@]} | \
+  if [ ! -z "$sorted" ]; then
+    $JQ -nc '{versions: $ARGS.positional}' --args ${sorted[@]} | \
       $JQ --indent 4 > ../metadata/kmwversions.json 
   else
     $JQ -nc '{error: "No releases found"}' | \
@@ -41,6 +39,7 @@ function _emit () {
 
 declare -a result
 result=$(_search)
-#echo "result is ${result[*]}"
+sorted=$(_sortVersions "${result[@]}")
+# echo "result is ${sorted[*]}"
 
 _emit
