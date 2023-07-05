@@ -1,4 +1,4 @@
-#!//usr/bin/env bash
+#!/usr/bin/env bash
 # Creates a static JSON file of KMW versions in descending order 
 
 set -eu
@@ -23,7 +23,7 @@ function _search () {
     echo ${arr[*]}
   fi  
 
-  cd ../../api
+  cd ../../deploy
 }
 
 # Write result to JSON file
