@@ -1,1 +1,4 @@
 .idea/
+
+# Ignore CI-generated static file of kmwversions
+metadata/
