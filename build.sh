@@ -1,4 +1,9 @@
 #!/usr/bin/env bash
+#
+# Setup s.keyman.com site to run via Docker.
+#
+set -eu
+
 ## START STANDARD BUILD SCRIPT INCLUDE
 # adjust relative paths as necessary
 THIS_SCRIPT="$(readlink -f "${BASH_SOURCE[0]}")"
@@ -6,19 +11,6 @@ THIS_SCRIPT="$(readlink -f "${BASH_SOURCE[0]}")"
 ## END STANDARD BUILD SCRIPT INCLUDE
 
 ################################ Main script ################################
-
-builder_describe "Setup s.keyman.com site to run via Docker." \
-  configure \
-  clean \
-  build \
-  start \
-  stop \
-  test \
-
-builder_parse "$@"
-
-# This script runs from its own folder
-cd "$REPO_ROOT"
 
 # Get the docker image ID
 function _get_docker_image_id() {
@@ -31,19 +23,15 @@ function _get_docker_container_id() {
 }
 
 function _stop_docker_container() {
-  local S_CONTAINER=$(_get_docker_container_id)
-  local CONTAINER_NAME="s-keyman-website"
-
-  if [ ! -z "$S_CONTAINER" ]; then
-    docker container stop ${CONTAINER_NAME}
+  local S_KEYMAN_CONTAINER=$(_get_docker_container_id)
+  if [ ! -z "$S_KEYMAN_CONTAINER" ]; then
+    docker container stop $S_KEYMAN_CONTAINER
   else
     echo "No Docker container to stop"
   fi
 }
 
 function _delete_docker_image() {
-  builder_echo "Stopping running container for s.keyman.com"
-  _stop_docker_container
   local S_IMAGE=$(_get_docker_image_id)
   if [ ! -z "$S_IMAGE" ]; then
     builder_echo "Removing image $S_IMAGE for s.keyman.com"
@@ -53,14 +41,40 @@ function _delete_docker_image() {
   fi
 }
 
+builder_describe \
+  "Setup s.keyman.com site to run via Docker." \
+  configure \
+  clean \
+  build \
+  start \
+  stop \
+  test \
+
+builder_parse "$@"
+
+# This script runs from its own folder
+cd "$REPO_ROOT"
 
 builder_run_action configure # no action
 
-# Stop and cleanup Docker containers and images used for the site
+if builder_start_action clean; then
+  # Stop and cleanup Docker containers and images used for the site
+  _stop_docker_container
+  
+  S_KEYMAN_CONTAINER=$(_get_docker_container_id)
+  if [ ! -z "$S_KEYMAN_CONTAINER" ]; then
+    docker container rm $S_KEYMAN_CONTAINER
+  else
+    echo "No Docker container to clean"
+  fi
+	
+  _delete_docker_image
+  
+  builder_finish_action success clean
+fi
 
-builder_run_action clean _delete_docker_image
 
-# Stop the Docker containers
+# Stop the Docker container
 builder_run_action stop _stop_docker_container
 
 # Build the Docker container
@@ -73,11 +87,6 @@ fi
 
 if builder_start_action start; then
   # Start the Docker container
-
-  if [ -d vendor ]; then
-    builder_die "vendor folder is in the way. Please delete it"
-  fi
-
   if [ ! -z $(_get_docker_image_id) ]; then
     if [[ $OSTYPE =~ msys|cygwin ]]; then
       # Windows needs leading slashes for path
@@ -95,25 +104,12 @@ if builder_start_action start; then
     builder_finish_action fail start
   fi
 
-  # Skip if link already exists
-  if [ -L vendor ]; then
-    builder_echo "\nLink to vendor/ already exists"
-  else
-    # TODO: handle vendor/ folder in the way
-    # Create link to vendor/ folder
-    builder_echo "making link for vendor/ folder"
-    docker exec -i s-keyman-website sh -c "ln -s /var/www/vendor vendor && chown -R www-data:www-data vendor"
-  fi
-
   builder_finish_action success start
 fi
 
 if builder_start_action test; then
   # TODO: lint tests
 
-  #docker exec -i s-keyman-website sh -c "php /var/www/html/vendor/bin/phpunit --testdox"
-
-  composer check-docker-links
 
   builder_finish_action success test
 fi
