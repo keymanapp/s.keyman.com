@@ -58,6 +58,11 @@ cd "$REPO_ROOT"
 builder_run_action configure # no action
 
 if builder_start_action clean; then
+  # Cleanup static file
+  if [ -f ./metadata/kmwversions.json ]; then
+    rm ./metadata/kmwversions.json
+  fi
+
   # Stop and cleanup Docker containers and images used for the site
   _stop_docker_container
   
@@ -110,6 +115,13 @@ fi
 if builder_start_action test; then
   # TODO: lint tests
 
-
+  # Generate static file
+  cd deploy
+  ./kmwversion.sh
+  cd ../
+  
+  if [ ! -f ./metadata/kmwversions.json ]; then
+    builder_die "Failed to generate static file"
+  fi
   builder_finish_action success test
 fi

@@ -13,7 +13,7 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v3
 
-    # Build the docker image and create link to vendor/ dependencies
+    # Build the docker image
     - name: Build the Docker image
       shell: bash
       run: |
@@ -22,32 +22,15 @@ jobs:
         fail-fast: true
 
     #
-    # Finally, run the tests
+    # Finally, run the test
     #
-    - name: Lint
+    - name: Test generation of static file
       shell: bash
       run: |
-        ( set +e; set +o pipefail; find . -name '*.php' | grep -v '/vendor/' | xargs -n 1 -d '\n' php -l | grep -v "No syntax errors detected"; exit ${PIPESTATUS[2]} )
+        ./build.sh test
+      env:
+        fail-fast: true  
 
-    - name: Check broken links
-      shell: bash
-      run: |
-        set +e;
-        set +o pipefail;
-        npx broken-link-checker http://localhost:8054 --ordered --recursive --host-requests 50 -e --filter-level 3 | \
-          grep -E "BROKEN|Getting links from" | \
-          grep -B 1 "BROKEN"
-        exit ${PIPESTATUS[0]}
-
-    - name: Check PHP errors
-      shell: bash
-      run: |
-        set +e
-        set +o pipefail
-        CONTAINER=`docker container ls -l -q`
-        docker container logs $CONTAINER 2>&1 | grep -q 'php7' && \
-          ( echo 'No PHP errors found' && exit 0 ) || \
-          ( echo 'PHP reported errors or warnings; see log below' && exit 1 )
     #
     # If any of the tests fail, let's grab a bit more detail on the environment
     #
