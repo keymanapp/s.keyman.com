@@ -1,3 +1,4 @@
 .idea/
 
-/vendor
+# Ignore CI-generated static file of kmwversions
+metadata/
