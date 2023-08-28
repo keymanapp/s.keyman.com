@@ -43,12 +43,14 @@ function _delete_docker_image() {
 
 builder_describe \
   "Setup s.keyman.com site to run via Docker." \
-  configure \
-  clean \
-  build \
-  start \
-  stop \
-  test \
+  "configure" \
+  "clean" \
+  "build" \
+  "start" \
+  "stop" \
+  "test" \
+  ":app          The s.keyman.com site" \
+  ":kmwversion   Generate the static file kmwversions.json"
 
 builder_parse "$@"
 
@@ -90,7 +92,7 @@ if builder_start_action build; then
   builder_finish_action success build
 fi
 
-if builder_start_action start; then
+if builder_start_action start:app; then
   # Start the Docker container
   if [ ! -z $(_get_docker_image_id) ]; then
     if [[ $OSTYPE =~ msys|cygwin ]]; then
@@ -109,17 +111,21 @@ if builder_start_action start; then
     builder_finish_action fail start
   fi
 
-  builder_finish_action success start
+  builder_finish_action success start:app
+fi
+
+if builder_start_action start:kmwversion; then
+  # Generate static file
+  cd "deploy"
+  ./kmwversion.sh
+  cd ../
+
+  builder_finish_action success start:kmwversion
 fi
 
 if builder_start_action test; then
   # TODO: lint tests
 
-  # Generate static file
-  cd deploy
-  ./kmwversion.sh
-  cd ../
-  
   if [ ! -f ./metadata/kmwversions.json ]; then
     builder_die "Failed to generate static file"
   fi
