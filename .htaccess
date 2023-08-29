@@ -1,8 +1,20 @@
 <IfModule mod_headers.c>
     Header set Access-Control-Allow-Origin "*"
 </IfModule>
+<IfModule mod_mime.c>
+    AddType font/ttf .ttf
+    AddType font/woff .woff
+    AddType font/woff2 .woff2
+    AddType font/otf .otf
+    AddType application/vnd.ms-fontobject .eot
+    AddType application/x-apple-aspen-config .mobileconfig
+    AddType image/svg+xml .svg
+    AddType application/javascript .js 
+
+    AddCharset UTF-8 .js
+</IfModule>
 <IfModule mod_rewrite.c>
     RewriteEngine on
 
-    RewriteRule ^(cdnrefresh.php|Dockerfile|web.config|.git|App_Data)$ - [R=404,L]
+    RewriteRule ^(build.sh|Dockerfile|.git|resources/)$ - [R=404,L]
 </IfModule>
