@@ -1,6 +1,7 @@
 # syntax=docker/dockerfile:1
+# Site
 FROM php:7.4-apache
+RUN cp /usr/local/etc/php/php.ini-production /usr/local/etc/php/php.ini
 RUN chown -R www-data:www-data /var/www/html/
 
-#COPY --chown=www-data --from=builder /var/www/html/vendor /var/www/vendor
 RUN a2enmod headers mime rewrite
