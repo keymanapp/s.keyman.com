@@ -1,0 +1,43 @@
+name: CI
+
+on: [pull_request]
+
+jobs:
+
+  build-test:
+    runs-on: ubuntu-20.04
+    env:
+      KEYMANHOSTS_TIER: TIER_TEST
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+
+    # Build the docker image
+    - name: Build the Docker image
+      shell: bash
+      run: |
+        ./build.sh build start
+      env:
+        fail-fast: true
+
+    #
+    # Finally, run the test
+    #
+    - name: Test generation of static file
+      shell: bash
+      run: |
+        ./build.sh test
+      env:
+        fail-fast: true  
+
+    #
+    # If any of the tests fail, let's grab a bit more detail on the environment
+    #
+    - name: Report errors
+      if: ${{ failure() }}
+      shell: bash
+      run: |
+        CONTAINER=`docker container ls -l -q`
+        echo "--- PHP errors in Docker log ---"
+        docker container logs $CONTAINER 2>&1 | grep 'php7'
