@@ -1,133 +1,63 @@
 #!/usr/bin/env bash
-#
-# Setup s.keyman.com site to run via Docker.
-#
-set -eu
+## START STANDARD SITE BUILD SCRIPT INCLUDE
+readonly THIS_SCRIPT="$(readlink -f "${BASH_SOURCE[0]}")"
+readonly BOOTSTRAP="$(dirname "$THIS_SCRIPT")/resources/bootstrap.inc.sh"
+readonly BOOTSTRAP_VERSION=chore/v0.4
+[ -f "$BOOTSTRAP" ] && source "$BOOTSTRAP" || source <(curl -fs https://raw.githubusercontent.com/keymanapp/shared-sites/$BOOTSTRAP_VERSION/bootstrap.inc.sh)
+## END STANDARD SITE BUILD SCRIPT INCLUDE
 
-## START STANDARD BUILD SCRIPT INCLUDE
-# adjust relative paths as necessary
-THIS_SCRIPT="$(readlink -f "${BASH_SOURCE[0]}")"
-. "${THIS_SCRIPT%/*}/resources/builder.inc.sh"
-## END STANDARD BUILD SCRIPT INCLUDE
+readonly S_KEYMAN_CONTAINER_NAME=s-keyman-website
+readonly S_KEYMAN_CONTAINER_DESC=s-keyman-com-app
+readonly S_KEYMAN_IMAGE_NAME=s-keyman-website
+readonly HOST_S_KEYMAN_COM=s.keyman.com.localhost
+
+source _common/keyman-local-ports.inc.sh
+source _common/docker.inc.sh
 
 ################################ Main script ################################
 
-# Get the docker image ID
-function _get_docker_image_id() {
-  echo "$(docker images -q s-keyman-website)"
-}
-
-# Get the Docker container ID
-function _get_docker_container_id() {
-  echo "$(docker ps -a -q --filter ancestor=s-keyman-website)"
-}
-
-function _stop_docker_container() {
-  local S_KEYMAN_CONTAINER=$(_get_docker_container_id)
-  if [ ! -z "$S_KEYMAN_CONTAINER" ]; then
-    docker container stop $S_KEYMAN_CONTAINER
-  else
-    echo "No Docker container to stop"
-  fi
-}
-
-function _delete_docker_image() {
-  local S_IMAGE=$(_get_docker_image_id)
-  if [ ! -z "$S_IMAGE" ]; then
-    builder_echo "Removing image $S_IMAGE for s.keyman.com"
-    docker rmi "$S_IMAGE"
-  else
-    builder_echo "No Docker s.keyman.com image to delete"
-  fi
-}
-
 builder_describe \
   "Setup s.keyman.com site to run via Docker." \
-  "configure" \
-  "clean" \
-  "build" \
-  "start" \
-  "stop" \
-  "test" \
-  ":app          The s.keyman.com site" \
-  ":kmwversion   Generate the static file kmwversions.json"
+  configure \
+  clean \
+  build \
+  start \
+  stop \
+  test \
 
 builder_parse "$@"
 
-# This script runs from its own folder
-cd "$REPO_ROOT"
+function test_docker_container() {
+  # Note: ci.yml replicates these
 
-builder_run_action configure # no action
+  # TODO: Run unit tests
+  #docker exec $S_KEYMAN_CONTAINER_DESC sh -c "vendor/bin/phpunit --testdox"
 
-if builder_start_action clean; then
-  # Cleanup static file
-  if [ -f ./metadata/kmwversions.json ]; then
-    rm ./metadata/kmwversions.json
-  fi
+  # Lint .php files for obvious errors
+  docker exec $S_KEYMAN_CONTAINER_DESC sh -c "find . -name '*.php' | grep -v '/vendor/' | xargs -n 1 -d '\\n' php -l"
 
-  # Stop and cleanup Docker containers and images used for the site
-  _stop_docker_container
-  
-  S_KEYMAN_CONTAINER=$(_get_docker_container_id)
-  if [ ! -z "$S_KEYMAN_CONTAINER" ]; then
-    docker container rm $S_KEYMAN_CONTAINER
-  else
-    echo "No Docker container to clean"
-  fi
-	
-  _delete_docker_image
-  
-  builder_finish_action success clean
-fi
+  # Link checker not needed. No html files to verify
 
-
-# Stop the Docker container
-builder_run_action stop _stop_docker_container
-
-# Build the Docker container
-if builder_start_action build; then
-  # Download docker image. --mount option requires BuildKit
-  DOCKER_BUILDKIT=1 docker build -t s-keyman-website .
-
-  builder_finish_action success build
-fi
-
-if builder_start_action start:app; then
-  # Start the Docker container
-  if [ ! -z $(_get_docker_image_id) ]; then
-    if [[ $OSTYPE =~ msys|cygwin ]]; then
-      # Windows needs leading slashes for path
-      SITE_HTML="//$(pwd):/var/www/html/"
-    else
-      SITE_HTML="$(pwd):/var/www/html/"
-    fi
-
-    docker run --rm -d -p 8054:80 -v ${SITE_HTML} \
-      --name s-keyman-website \
-      s-keyman-website
-
-  else
-    builder_echo error "ERROR: Docker container doesn't exist. Run ./build.sh build first"
-    builder_finish_action fail start
-  fi
-
-  builder_finish_action success start:app
-fi
-
-if builder_start_action start:kmwversion; then
-  # Generate static file
-  cd "deploy"
-  ./kmwversion.sh
-  cd ../
-
-  builder_finish_action success start:kmwversion
-fi
-
-if builder_start_action test; then
-  # TODO: lint tests
-
+  # Verify static file generated
   if [ ! -f ./metadata/kmwversions.json ]; then
     builder_die "Failed to generate static file"
+  fi  
+}
+
+# Custom cleanup of static file
+function clean_docker_container_s() {
+  clean_docker_container $S_KEYMAN_IMAGE_NAME $S_KEYMAN_CONTAINER_NAME
+
+  # Cleanup static file
+   if [ -f ./metadata/kmwversions.json ]; then
+    rm ./metadata/kmwversions.json
   fi
-  builder_finish_action success test
-fi
+}
+
+builder_run_action configure   bootstrap_configure
+builder_run_action clean       clean_docker_container_s
+builder_run_action stop        stop_docker_container  $S_KEYMAN_IMAGE_NAME $S_KEYMAN_CONTAINER_NAME
+builder_run_action build       build_docker_container $S_KEYMAN_IMAGE_NAME $S_KEYMAN_CONTAINER_NAME
+builder_run_action start       start_docker_container $S_KEYMAN_IMAGE_NAME $S_KEYMAN_CONTAINER_NAME $S_KEYMAN_CONTAINER_DESC $HOST_S_KEYMAN_COM $PORT_S_KEYMAN_COM
+
+builder_run_action test        test_docker_container
