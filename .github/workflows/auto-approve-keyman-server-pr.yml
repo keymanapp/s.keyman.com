@@ -1,0 +1,18 @@
+#
+# Automatically approves pull requests opened by keyman-server
+#
+# When a script creates a PR, this workflow will be triggered to approve the PR,
+# and then auto-merge-keyman-server-pr.yml will merge it
+#
+name: Auto Approve PRs from keyman-server
+
+on: pull_request_target
+
+jobs:
+  auto-approve:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+    steps:
+    - uses: hmarr/auto-approve-action@44888193675f29a83e04faf4002fa8c0b537b1e4 # v3.2.1
+      if: github.actor == 'keyman-server'
