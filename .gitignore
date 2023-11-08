@@ -2,3 +2,10 @@
 
 # Ignore CI-generated static file of kmwversions
 metadata/
+
+/vendor
+
+# Shared files are bootstrapped:
+resources/bootstrap.inc.sh
+resources/.bootstrap-version
+_common/
