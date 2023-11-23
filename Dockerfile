@@ -1,2 +1,11 @@
-FROM php:5.6-apache
-RUN a2enmod rewrite 
+# syntax=docker/dockerfile:1
+# Site
+FROM php:7.4-apache
+
+# Install jq
+RUN apt-get update && apt-get install -y \
+  jq
+RUN cp /usr/local/etc/php/php.ini-production /usr/local/etc/php/php.ini
+RUN chown -R www-data:www-data /var/www/html/
+
+RUN a2enmod headers mime rewrite
