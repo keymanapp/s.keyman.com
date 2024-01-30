@@ -18,3 +18,6 @@
 
     RewriteRule ^(build.sh|Dockerfile|.git|resources/)$ - [R=404,L]
 </IfModule>
+
+# Ready
+RewriteRule "^_control/ready$" "_control/ready.php" [END]
