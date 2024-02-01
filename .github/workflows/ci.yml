@@ -1,0 +1,65 @@
+name: CI
+
+on: [pull_request]
+
+jobs:
+
+  build-test:
+    runs-on: ubuntu-20.04
+    env:
+      KEYMANHOSTS_TIER: TIER_TEST
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+
+    # Build the docker image
+    - name: Build the Docker image
+      shell: bash
+      run: |
+        echo "TIER_TEST" > tier.txt
+        ./build.sh build start
+      env:
+        fail-fast: true
+
+    #
+    # Finally, run the tests; note that this is almost all replicated in build.sh; here logging is reduced (TODO sync)
+    #
+    - name: Lint
+      shell: bash
+      run: |
+        ( set +e; set +o pipefail; find . -name '*.php' | grep -v '/vendor/' | xargs -n 1 -d '\n' php -l | grep -v "No syntax errors detected"; exit ${PIPESTATUS[2]} )
+
+    # Link checker not needed. No html files to verify
+
+    - name: Check PHP errors
+      shell: bash
+      run: |
+        CONTAINER=`docker container ls -l -q`
+        if docker container logs $CONTAINER 2>&1 | grep -q 'php7'; then
+          echo 'PHP reported errors or warnings:'
+          docker container logs $CONTAINER 2>&1 | grep 'php7'
+          exit 1
+        else
+          echo 'No PHP errors found'
+          exit 0
+        fi
+
+    - name: Check static file generated
+      shell: bash
+      run: |
+        pwd
+        if [ ! -f ./metadata/kmwversions.json ]; then
+          echo "Failed to generate static file"
+          exit 1
+        fi    
+    #
+    # If any of the tests fail, let's grab a bit more detail on the environment
+    #
+    - name: Report errors
+      if: ${{ failure() }}
+      shell: bash
+      run: |
+        CONTAINER=`docker container ls -l -q`
+        echo "--- PHP errors in Docker log ---"
+        docker container logs $CONTAINER 2>&1 | grep 'php7'

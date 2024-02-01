@@ -1,0 +1,5 @@
+
+AddType text/prs.typescript .ts
+
+# Version 2.0 build rewrite"
+RewriteRule "^(\d+)/(.+)$" "/kmw/engine/2.0.$1/$2"
