@@ -3,8 +3,6 @@
 
 set -eu
 
-. ./jq.inc.sh
-
 # Sort the versions in descending order
 # https://stackoverflow.com/questions/65315720/how-to-sort-release-version-string-in-descending-order-with-bash
 function _sortVersions () {
@@ -29,11 +27,11 @@ function _search () {
 # Write result to JSON file
 function _emit () {
   if [ ! -z "$sorted" ]; then
-    $JQ -nc '{versions: $ARGS.positional}' --args ${sorted[@]} | \
-      $JQ --indent 4 > ../metadata/kmwversions.json 
+    jq -nc '{versions: $ARGS.positional}' --args ${sorted[@]} | \
+      jq --indent 4 > ../metadata/kmwversions.json 
   else
-    $JQ -nc '{error: "No releases found"}' | \
-      $JQ --indent 4 > ../metadata/kmwversions.json    
+    jq -nc '{error: "No releases found"}' | \
+      jq --indent 4 > ../metadata/kmwversions.json    
   fi
 }
 
