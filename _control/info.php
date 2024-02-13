@@ -17,3 +17,6 @@
   }
 
   echo "<p>TIER: " . $tier . "</p>";
+
+  echo "<p><a href='./alive'>Alive</a></p>";
+  echo "<p><a href='./ready'>Ready</a></p>";
