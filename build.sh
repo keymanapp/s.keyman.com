@@ -2,7 +2,7 @@
 ## START STANDARD SITE BUILD SCRIPT INCLUDE
 readonly THIS_SCRIPT="$(readlink -f "${BASH_SOURCE[0]}")"
 readonly BOOTSTRAP="$(dirname "$THIS_SCRIPT")/resources/bootstrap.inc.sh"
-readonly BOOTSTRAP_VERSION=v0.18
+readonly BOOTSTRAP_VERSION=v0.21
 [ -f "$BOOTSTRAP" ] && source "$BOOTSTRAP" || source <(curl -fs https://raw.githubusercontent.com/keymanapp/shared-sites/$BOOTSTRAP_VERSION/bootstrap.inc.sh)
 ## END STANDARD SITE BUILD SCRIPT INCLUDE
 
@@ -41,7 +41,7 @@ function test_docker_container() {
   # Verify static file generated
   if [ ! -f ./metadata/kmwversions.json ]; then
     builder_die "Failed to generate static file"
-  fi  
+  fi
 }
 
 # Custom cleanup of static file
