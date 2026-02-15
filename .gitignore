@@ -8,4 +8,5 @@ metadata/
 # Shared files are bootstrapped:
 resources/bootstrap.inc.sh
 resources/.bootstrap-version
+resources/.bootstrap-registry
 _common/
