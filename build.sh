@@ -62,7 +62,7 @@ function clean_docker_container_s() {
 builder_run_action configure   bootstrap_configure
 builder_run_action clean       clean_docker_container_s
 builder_run_action stop        stop_docker_container  $S_KEYMAN_IMAGE_NAME $S_KEYMAN_CONTAINER_NAME
-builder_run_action build       build_docker_container $S_KEYMAN_IMAGE_NAME $S_KEYMAN_CONTAINER_NAME
-builder_run_action start       start_docker_container $S_KEYMAN_IMAGE_NAME $S_KEYMAN_CONTAINER_NAME $S_KEYMAN_CONTAINER_DESC $HOST_S_KEYMAN_COM $PORT_S_KEYMAN_COM
+builder_run_action build       build_docker_container $S_KEYMAN_IMAGE_NAME $S_KEYMAN_CONTAINER_NAME $BUILDER_CONFIGURATION
+builder_run_action start       start_docker_container $S_KEYMAN_IMAGE_NAME $S_KEYMAN_CONTAINER_NAME $S_KEYMAN_CONTAINER_DESC $HOST_S_KEYMAN_COM $PORT_S_KEYMAN_COM $BUILDER_CONFIGURATION
 
 builder_run_action test        test_docker_container
