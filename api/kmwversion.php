@@ -12,7 +12,7 @@ function version_filter($a) {
 }
 
 function version_compare_backward($a, $b) {
-  return version_compare($a, $b, '<');
+  return -version_compare($a, $b);
 }
 
 function search() {
