@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
 # Site
-FROM php:8.4-apache@sha256:51da594c844a97f31b1cd6b1ac6660982f40788f4fe13e75f7fd39e2f9b58651
+FROM php:8.4-apache@sha256:56e7dab56ae21ec10aae951f93cbe7069c1ca68a714dd22ca78724268c78f5de
 
 # Install jq
 RUN apt-get update && apt-get install -y \
